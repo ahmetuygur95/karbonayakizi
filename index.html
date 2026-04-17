@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karbon Ayak İzi Hesaplama</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background: #f4f4f4; 
+    padding: 20px;
+    line-height: 1.6;
+    max-width: 800px; 
+    margin: 0 auto;
+}
+
+section {
+    background: white; 
+    padding: 20px; 
+    margin-bottom: 15px; 
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+h2 {text-align: center; color: #1b5e20;}
+h3 {color: #2e7d32; border-bottom: 2px solid #e8f5e9; padding-bottom: 5px;}
+label {display: block; margin-top: 15px; font-weight: bold;}
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+button {
+    flex: 2;
+    padding: 15px;
+    font-size: 18px;
+    cursor: pointer;
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-reset {
+    flex: 1;
+    background-color: #e0e0e0;
+    color: #444;
+}
+
+button:hover {
+    background-color: #1b5e20;
+    transform: translateY(-2px);
+}
+
+.btn-reset:hover {
+    background-color: #bdbdbd;
+}
+
+#result {
+    margin-top: 30px; 
+    font-size: 20px; 
+    font-weight: bold;
+    display: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 350px; /* Lejantlar için biraz daha alan */
+    width: 100%;
+    max-width: 450px;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Bireysel Karbon Ayak İzi Hesaplama (kg CO₂ / yıl)</h2>
+
+<section>
+<h3>Ulaşım Alışkanlıkları</h3>
+<label>Günlük Ortalama Ulaşım Mesafeniz:</label>
+<select id="distance">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="1500">0-5 Km</option>
+<option value="4500">5-20 Km</option>
+<option value="10500">20-50 Km</option>
+<option value="18000">50+ Km</option>
+</select>
+
+<label>En Sık Kullandığınız Ulaşım Türü:</label>
+<select id="transport">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="0">Bisiklet / Yürüyüş</option>
+<option value="0.05">Toplu Taşıma</option>
+<option value="0.18">Özel Araç (Benzin)</option>
+<option value="0.20">Özel Araç (Dizel)</option>
+<option value="0.07">Özel Araç (Elektrikli)</option>
+</select>
+
+<label>Haftada Kaç Gün Araç Kullanıyorsunuz?</label>
+<select id="carDays">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="0.3">0-2</option>
+<option value="0.7">3-5</option>
+<option value="1">6-7</option>
+</select>
+
+<label>Yılda Kaç Kez Uçak Yolculuğu Yapıyorsunuz?</label>
+<select id="flight">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="0">Hiç</option>
+<option value="400">1-2</option>
+<option value="1200">3-5</option>
+<option value="2500">5+</option>
+</select>
+</section>
+
+<section>
+<h3>Konut ve Enerji</h3>
+<label>Elektrik Tüketiminiz:</label>
+<select id="electric">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="600">Düşük (1-2 Kişi)</option>
+<option value="1300">Orta (3-4 Kişi)</option>
+<option value="2200">Yüksek (Geniş Aile)</option>
+</select>
+
+<label>Isınma Türü:</label>
+<select id="heating">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="1400">Doğalgaz</option>
+<option value="2800">Kömür</option>
+<option value="1800">Elektrik</option>
+<option value="0">Yenilenebilir Enerji</option>
+</select>
+
+<label>Enerji Tasarrufu</label>
+<select id="bulb">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="-100">Led/Tasarruflu Ampul Kullanıyorum</option>
+<option value="0">Normal Ampul Kullanıyorum</option>
+</select>
+
+<label>Klima Kullanım Sıklığı:</label>
+<select id="ac">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="0">Yok</option>
+<option value="150">Nadiren</option>
+<option value="350">Sık</option>
+<option value="700">Çok Sık</option>
+</select>
+</section>
+
+<section>
+<h3>Beslenme Alışkanlıkları</h3>
+<label>Süt ve Süt Ürünleri Tüketimi:</label>
+<select id="dairy">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="400">Her Gün</option>
+<option value="250">Haftada Birkaç Kez</option>
+<option value="100">Nadiren / Hiç</option>
+</select>
+
+<label>Et Tüketim Sıklığınız:</label>
+<select id="meat">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="2200">Her Gün</option>
+<option value="1400">Haftada Birkaç Kez</option>
+<option value="500">Nadiren / Hiç</option>
+</select>
+
+<label>Paketli Gıda Tüketimi:</label>
+<select id="packaged">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="350">Her Gün</option>
+<option value="200">Haftada Birkaç Kez</option>
+<option value="80">Nadiren / Hiç</option>
+</select>
+
+<label>Dışarıdan Yemek Siparişi:</label>
+<select id="eatout">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="400">Her Gün</option>
+<option value="200">Haftada Birkaç Kez</option>
+<option value="80">Nadiren / Hiç</option>
+</select>
+</section>
+
+<section>
+<h3>Tüketim Alışkanlıkları</h3>
+<label>Yeni Kıyafet Alışveriş Sıklığınız:</label>
+<select id="clothes">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="700">Sık (Ayda 1+)</option>
+<option value="350">Orta (2-3 Ayda 1)</option>
+<option value="120">Az (Yılda Birkaç Kez)</option>
+</select>
+
+<label>Elektronik Ürün Değiştirme Süreniz:</label>
+<select id="electronics">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="450">1-2 Yıl</option>
+<option value="250">3-5 Yıl</option>
+<option value="100">5+ Yıl</option>
+</select>
+
+<label>İkinci El Ürün Kullanımı:</label>
+<select id="secondhand">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="-200">Sık</option>
+<option value="-100">Bazen</option>
+<option value="0">Hiç</option>
+</select>
+
+<label>Online Alışveriş Yapma Sıklığınız:</label>
+<select id="online">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="250">Çok Sık</option>
+<option value="150">Ara Sıra</option>
+<option value="50">Nadiren</option>
+</select>
+</section>
+
+<section>
+<h3>Atık ve Geri Dönüşüm</h3>
+<label>Geri Dönüşüm Yapıyor Musunuz?</label>
+<select id="recycle">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="0">Evet Düzenli</option>
+<option value="100">Bazen</option>
+<option value="250">Hayır</option>
+</select>
+
+<label>Organik Atıkları Ayırıyor Musunuz?</label>
+<select id="organic">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="-50">Evet</option>
+<option value="0">Hayır</option>
+</select>
+
+<label>Tek Kullanımlık Ürün Kullanımınız:</label>
+<select id="single">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="250">Çok Fazla</option>
+<option value="150">Orta</option>
+<option value="50">Az</option>
+</select>
+</section>
+
+<section>
+<h3>Su Kullanımı</h3>
+<label>Günlük Duş Süreniz:</label>
+<select id="shower">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="80">0-10 Dk</option>
+<option value="150">10-15 Dk</option>
+<option value="250">15+ Dk</option>
+</select>
+
+<label>Su Tasarrufu Önlemleri:</label>
+<select id="water">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="0">Var</option>
+<option value="100">Yok</option>
+</select>
+
+<label>Çamaşır/Bulaşık Makinesi Kullanım Sıklığı:</label>
+<select id="machine">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="180">Günlük</option>
+<option value="100">Haftada 1-2 Gün</option>
+</select>
+</section>
+
+<section>
+<h3>Dijital Karbon Ayak İzi</h3>
+<label>Günlük İnternet Kullanım Süreniz:</label>
+<select id="internet">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="40">1 Saat Altı</option>
+<option value="120">1-4 Saat</option>
+<option value="250">4+ Saat</option>
+</select>
+
+<label>Video İzleme Alışkanlığı:</label>
+<select id="video">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="40">Nadiren</option>
+<option value="120">Günlük</option>
+<option value="250">Çok Yoğun</option>
+</select>
+
+<label>E-Posta Temizliği Yapıyor Musunuz?</label>
+<select id="mail">
+<option value="" selected disabled>Lütfen Seçiniz</option>
+<option value="0">Evet</option>
+<option value="40">Hayır</option>
+</select>
+</section>
+
+
+<div class="button-group">
+    <button onclick="hesapla()">Hesapla</button>
+    <button type="button" class="btn-reset" onclick="formuSifirla()">Sıfırla</button>
+</div>
+
+<p style="text-align: center; color: #777; font-size: 13px; margin: 15px auto; max-width: 600px; line-height: 1.4; font-style: italic;">
+     <strong>Not:</strong> Bu hesaplamalar, ortalama emisyon katsayıları kullanılarak elde edilen <b>yaklaşık değerlerdir</b>. Temel amaç, hangi alanlarda daha fazla karbon salınımı yaptığınıza dair bir <b>farkındalık oluşturmaktır.</b>
+</p>
+
+<div id="result">
+    <div id="resultText"></div>
+    <div class="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+</div>
+
+<script>
+let chartInstance = null;
+
+function hesapla() {
+const ids = [
+"distance","transport","carDays","flight",
+"electric","heating","bulb","ac",
+"dairy","meat","packaged","eatout",
+"clothes","electronics","secondhand","online",
+"recycle","organic","single",
+"shower","water","machine",
+"internet","video","mail",
+];
+
+for (let id of ids) {
+    const el = document.getElementById(id);
+   if (el.value === "") {
+        alert("Lütfen Tüm Soruları Cevaplayınız.");
+        return;
+    }
+}
+    const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+
+ 
+    let catUlasim = (getVal("distance") * getVal("transport") * getVal("carDays")) + getVal("flight");
+    let catKonut = getVal("electric") + getVal("heating") + getVal("bulb") + getVal("ac");
+    let catBeslenme = getVal("dairy") + getVal("meat") + getVal("packaged") + getVal("eatout");
+    let catTüketim = getVal("clothes") + getVal("electronics") + getVal("secondhand") + getVal("online");
+    let catAtik = getVal("recycle") + getVal("organic") + getVal("single");
+    let catSu = getVal("shower") + getVal("water") + getVal("machine");
+    let catDijital = getVal("internet") + getVal("video") + getVal("mail");
+
+   
+    let toplam = catUlasim + catKonut + catBeslenme + catTüketim + catAtik + catSu + catDijital;
+    if(toplam < 0) toplam = 0;
+
+    let ton = (toplam / 1000).toFixed(2);
+    let seviye = "";
+    let renk = "";
+
+    if (toplam < 4000) { seviye = "🟢 Düşük"; renk = "#2e7d32"; }
+    else if (toplam < 8000) { seviye = "🟡 Orta"; renk = "#f9a825"; }
+    else if (toplam < 12000) { seviye = "🔴 Yüksek"; renk = "#d32f2f"; }
+    else { seviye = "⚫ Çok Yüksek"; renk = "#212121"; }
+
+
+document.body.style.transition = "background 1s ease"; // Yumuşak geçiş için
+document.body.style.background = renk + "15"; // Rengin sonuna '15' ekleyerek çok şeffaf (açık) bir ton elde ederiz
+
+    let oneriler = [];
+    if (catUlasim > 2000) oneriler.push("Özel araç kullanımını azaltıp haftada birkaç gün toplu taşımaya geçebilirsin.");
+    if (getVal("flight") > 300) oneriler.push("Uçuş sayını azaltarak yılda ciddi miktarda karbon tasarrufu sağlayabilirsin.");
+    if (getVal("electric") > 1300) oneriler.push("Enerji tasarruflu cihazlar ve LED aydınlatma kullanabilirsin.");
+    if (getVal("heating") > 1400) oneriler.push("Isı yalıtımı ve termostat kullanımı ile ısınma kaynaklı emisyonları azaltabilirsin.");
+    if (getVal("meat") > 1500) oneriler.push("Et tüketimini azaltmak karbon ayak izini ciddi şekilde düşürür.");
+    if (getVal("dairy") > 400) oneriler.push("Süt ürünlerini azaltarak beslenme kaynaklı emisyonları düşürebilirsin.");
+    if (getVal("clothes") > 350) oneriler.push("Daha az yeni kıyafet alıp sürdürülebilir moda ve ikinci el ürünleri tercih edebilirsin.");
+    if (getVal("electronics") > 250) oneriler.push("Elektronik cihazlarını daha uzun süre kullanarak üretimi azaltabilirsin.");
+    if (getVal("single") > 150) oneriler.push("Tek kullanımlık ürünleri azaltarak atık kaynaklı emisyonları düşürebilirsin.");
+    if (getVal("internet") > 120 || getVal("video") > 120) oneriler.push("Gereksiz video streaming ve internet kullanımını azaltabilirsin.");
+
+    if (oneriler.length === 0) oneriler.push("Harika! Karbon ayak izin dengeli görünüyor.");
+
+    const resultDiv = document.getElementById("result");
+    const resultText = document.getElementById("resultText");
+    
+    resultDiv.style.display = "block";
+    resultDiv.style.padding = "20px";
+    resultDiv.style.marginTop = "30px";
+    resultDiv.style.borderRadius = "10px";
+    resultDiv.style.backgroundColor = "#fff";
+    resultDiv.style.borderLeft = "10px solid " + renk;
+
+    // Mesajı buraya ekliyoruz (innerHTML içindeki yerleşime dikkat)
+    resultText.innerHTML = 
+        "<h3 style='margin-top:0;'>Hesaplama Sonucu</h3>" +
+        "Yıllık Karbon Ayak İziniz:<br>" +
+        "<span style='font-size:32px; color:" + renk + ";'>" + toplam.toFixed(0) + " kg CO₂</span> " + 
+        "<b>(" + ton + " Ton)</b><br>" +
+        "<span style='font-size:22px;'>" + seviye + "</span>" +
+        "<br><br><div style='text-align:left; font-weight:normal; font-size:16px;'>" +
+        "<b>💡 Kişisel Azaltım Önerileri:</b><br>" +
+        "<ul>" + oneriler.map(x => "<li>" + x + "</li>").join("") + "</ul></div>" +
+       "<div style='background: #e8f5e9; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 14px; color: #2e7d32; font-weight:normal; text-align:left;'>" +
+"<strong>Küresel ve Yerel Durum (2026):</strong> Dünya genelinde kişi başı yıllık karbon salınımı ortalama 5 ton seviyesindeyken, Türkiye'de bu rakam artan enerji ihtiyacı ve sanayi üretimiyle birlikte yaklaşık 7,2 tona yükselmiştir.</div>";
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+    if (chartInstance) { chartInstance.destroy(); }
+
+    // Grafik Etiketleri (Yüzdelerle birlikte)
+const labelsWithPerc = [
+        `Ulaşım (%${toplam > 0 ? ((catUlasim/toplam)*100).toFixed(1) : 0})`,
+        `Konut ve Enerji (%${toplam > 0 ? ((catKonut/toplam)*100).toFixed(1) : 0})`,
+        `Beslenme (%${toplam > 0 ? ((catBeslenme/toplam)*100).toFixed(1) : 0})`,
+        `Tüketim (%${toplam > 0 ? ((catTüketim/toplam)*100).toFixed(1) : 0})`,
+        `Atık (%${toplam > 0 ? ((catAtik/toplam)*100).toFixed(1) : 0})`,
+        `Su (%${toplam > 0 ? ((catSu/toplam)*100).toFixed(1) : 0})`,
+        `Dijital (%${toplam > 0 ? ((catDijital/toplam)*100).toFixed(1) : 0})`
+    ];
+
+    chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labelsWithPerc,
+            datasets: [{
+                data: [catUlasim, catKonut, catBeslenme, catTüketim, catAtik, catSu, catDijital],
+                backgroundColor: [
+                    '#4caf50', // Ulaşım (Yeşil)
+                    '#2196f3', // Konut (Mavi)
+                    '#f44336', // Beslenme (Kırmızı)
+                    '#ff9800', // Tüketim (Turuncu)
+                    '#795548', // Atık (Kahverengi)
+                    '#00bcd4', // Su (Turkuaz)
+                    '#9c27b0'  // Dijital (Mor)
+                ],
+                borderWidth: 2,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 12, weight: 'bold' },
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label.split(' (')[0] + ": " + context.raw.toFixed(0) + " kg";
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    resultDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function formuSifirla() {
+    // Tüm select'leri varsayılan (Lütfen Seçiniz) haline getirir
+    const ids = ["distance","transport","carDays","flight","electric","heating","bulb","ac","dairy","meat","packaged","eatout","clothes","electronics","secondhand","online","recycle","organic","single","shower","water","machine","internet","video","mail"];
+    
+    ids.forEach(id => {
+        document.getElementById(id).selectedIndex = 0;
+    });
+
+    // Sonuç kutusunu gizle ve arkaplanı sıfırla
+    document.getElementById("result").style.display = "none";
+    document.body.style.background = "#f4f4f4";
+    
+    // Sayfayı yukarı kaydır
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+</script>
+
+</body>
+</html>
